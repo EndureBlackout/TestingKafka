@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Kafka;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace KafkaTopicConsumer
 {
@@ -23,9 +25,16 @@ namespace KafkaTopicConsumer
                           ConsumerGroup = "$Default")] KafkaEventData<string>[] events,
             ILogger log)
         {
-            foreach (KafkaEventData<string> eventData in events)
+            foreach(KafkaEventData<string> eventData in events)
             {
-                log.LogInformation($"C# Kafka trigger function processed a message: {eventData.Value}");
+                var order = JsonConvert.DeserializeObject<Order>(eventData.Value);
+
+                log.LogInformation($"New order from Kafka:\n Id:{order.Id}\n Items:\n");
+                
+                foreach(string item in order.Items)
+                {
+                    log.LogInformation($"\t{item}\n");
+                }
             }
         }
     }
